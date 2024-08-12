@@ -1,0 +1,43 @@
+version: '3.3'
+
+volumes:
+  pg_data:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:13
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  frontend:
+    image: csdochub/frontend
+    volumes:
+      - ./frontend/:/app/result_build/
+  backend:
+    image: csdochub/backend
+    restart: always
+    volumes:
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
+      - static:/app/backend_static/
+      - media:/app/media/
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+  nginx:
+    image: csdochub/gateway
+    ports:
+      - 8000:80
+    volumes:
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
+      - static:/static/
+      - media:/media/
+    depends_on:
+      - backend
+      - frontend
+      - db
+
